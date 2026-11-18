@@ -1,0 +1,1290 @@
+# Simulador-planos-Inclinados-
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Interactivo: Planos Inclinados y Masas Intercambiables</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1120;
+            color: #f8fafc;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        input[type="range"] { height: 6px; border-radius: 5px; }
+        .weight-chip {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .weight-chip:hover {
+            transform: translateY(-2px);
+        }
+        .weight-chip:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+    <!-- Encabezado Superior -->
+    <header class="bg-slate-900/95 backdrop-blur border-b border-slate-800 sticky top-0 z-30 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col lg:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20 font-extrabold text-xl">
+                    ⚛️
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
+                        Simulador de Física: Planos Inclinados
+                    </h1>
+                    <p class="text-xs text-slate-400">
+                        Dinámica de Dos Bloques, Fricción Cinética, Cinemática y Trabajo-Energía
+                    </p>
+                </div>
+            </div>
+
+            <!-- Barra de Botones Interactivos de Movimiento -->
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <button id="btnPlay" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer">
+                    <span>▶</span> Iniciar
+                </button>
+                <button id="btnPause" class="bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl shadow-lg shadow-amber-600/20 transition flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                    <span>⏸</span> Pausa
+                </button>
+                <button id="btnStep" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl shadow-lg shadow-sky-600/20 transition flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer" title="Avanzar exactamente +0.05 segundos">
+                    <span>⏭</span> Paso (+0.05s)
+                </button>
+                <button id="btnReset" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl shadow-md transition flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer">
+                    <span>🔄</span> Reiniciar
+                </button>
+                <div class="h-6 w-px bg-slate-700 mx-1 hidden sm:block"></div>
+                <button id="btnDownload" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer" title="Exportar aplicación HTML autocontenida">
+                    <span>⬇️</span> Descargar HTML
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 flex flex-col gap-6">
+
+        <!-- Grid Superior: Panel de Masas Intercambiables + Lienzo Canvas -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Columna Izquierda: Masas Intercambiables y Parámetros (4 columnas) -->
+            <div class="lg:col-span-4 bg-slate-800/75 backdrop-blur border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between gap-4">
+                
+                <!-- Sección de Masas Intercambiables -->
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-2.5 mb-3">
+                        <h2 class="text-sm sm:text-base font-bold text-indigo-300 flex items-center gap-2">
+                            <span>⚖️</span> Masas Intercambiables
+                        </h2>
+                        <button id="btnSwapMasses" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 cursor-pointer" title="Permutar m1 y m2 instantáneamente">
+                            <span>⇄</span> Intercambiar (m₁ ↔ m₂)
+                        </button>
+                    </div>
+
+                    <!-- Banco de Pesas Intercambiables -->
+                    <div class="bg-slate-900/80 border border-slate-700/70 rounded-xl p-3 mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-semibold text-slate-400">Banco de Bloques (Clic o Arrastrar al plano):</span>
+                            <div class="flex gap-1 text-[10px]">
+                                <button id="targetM1Btn" class="px-2 py-0.5 rounded bg-blue-600 text-white font-bold cursor-pointer">Asignar a m₁</button>
+                                <button id="targetM2Btn" class="px-2 py-0.5 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 font-bold cursor-pointer">Asignar a m₂</button>
+                            </div>
+                        </div>
+                        <div id="weightBank" class="grid grid-cols-3 gap-2">
+                            <div draggable="true" data-mass="2" class="weight-chip bg-teal-600/20 border border-teal-500/50 hover:bg-teal-600/30 text-teal-300 rounded-lg py-1.5 px-2 text-center cursor-pointer">
+                                <div class="text-xs font-extrabold">2 kg</div>
+                                <div class="text-[9px] opacity-75">Ligero</div>
+                            </div>
+                            <div draggable="true" data-mass="5" class="weight-chip bg-cyan-600/20 border border-cyan-500/50 hover:bg-cyan-600/30 text-cyan-300 rounded-lg py-1.5 px-2 text-center cursor-pointer">
+                                <div class="text-xs font-extrabold">5 kg</div>
+                                <div class="text-[9px] opacity-75">Medio-Bajo</div>
+                            </div>
+                            <div draggable="true" data-mass="10" class="weight-chip bg-blue-600/20 border border-blue-500/50 hover:bg-blue-600/30 text-blue-300 rounded-lg py-1.5 px-2 text-center cursor-pointer">
+                                <div class="text-xs font-extrabold">10 kg</div>
+                                <div class="text-[9px] opacity-75">Base m₁</div>
+                            </div>
+                            <div draggable="true" data-mass="12" class="weight-chip bg-indigo-600/20 border border-indigo-500/50 hover:bg-indigo-600/30 text-indigo-300 rounded-lg py-1.5 px-2 text-center cursor-pointer">
+                                <div class="text-xs font-extrabold">12 kg</div>
+                                <div class="text-[9px] opacity-75">Base m₂</div>
+                            </div>
+                            <div draggable="true" data-mass="15" class="weight-chip bg-purple-600/20 border border-purple-500/50 hover:bg-purple-600/30 text-purple-300 rounded-lg py-1.5 px-2 text-center cursor-pointer">
+                                <div class="text-xs font-extrabold">15 kg</div>
+                                <div class="text-[9px] opacity-75">Pesado</div>
+                            </div>
+                            <div draggable="true" data-mass="20" class="weight-chip bg-rose-600/20 border border-rose-500/50 hover:bg-rose-600/30 text-rose-300 rounded-lg py-1.5 px-2 text-center cursor-pointer">
+                                <div class="text-xs font-extrabold">20 kg</div>
+                                <div class="text-[9px] opacity-75">Extra</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sliders Precisos -->
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="sliderM1" class="text-slate-300 font-medium">Masa 1 (m₁ - Izquierda):</label>
+                                <span id="lblM1" class="font-bold text-blue-400">10.0 kg</span>
+                            </div>
+                            <input type="range" id="sliderM1" min="1" max="30" step="0.5" value="10" class="w-full accent-blue-500 bg-slate-700 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="sliderTheta1" class="text-slate-300 font-medium">Ángulo plano izquierdo (θ₁):</label>
+                                <span id="lblTheta1" class="font-bold text-blue-400">20°</span>
+                            </div>
+                            <input type="range" id="sliderTheta1" min="5" max="70" step="1" value="20" class="w-full accent-blue-500 bg-slate-700 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="sliderM2" class="text-slate-300 font-medium">Masa 2 (m₂ - Derecha):</label>
+                                <span id="lblM2" class="font-bold text-indigo-400">12.0 kg</span>
+                            </div>
+                            <input type="range" id="sliderM2" min="1" max="30" step="0.5" value="12" class="w-full accent-indigo-500 bg-slate-700 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="sliderTheta2" class="text-slate-300 font-medium">Ángulo plano derecho (θ₂):</label>
+                                <span id="lblTheta2" class="font-bold text-indigo-400">40°</span>
+                            </div>
+                            <input type="range" id="sliderTheta2" min="5" max="70" step="1" value="40" class="w-full accent-indigo-500 bg-slate-700 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="sliderMu" class="text-slate-300 font-medium">Coef. Fricción cinética (μ):</label>
+                                <span id="lblMu" class="font-bold text-amber-400">0.20</span>
+                            </div>
+                            <input type="range" id="sliderMu" min="0" max="0.7" step="0.01" value="0.20" class="w-full accent-amber-500 bg-slate-700 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <label for="sliderL" class="text-slate-300 font-medium">Distancia objetivo (L):</label>
+                                <span id="lblL" class="font-bold text-emerald-400">0.80 m</span>
+                            </div>
+                            <input type="range" id="sliderL" min="0.2" max="2.5" step="0.05" value="0.80" class="w-full accent-emerald-500 bg-slate-700 cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control de Velocidad de Reproducción y Opciones -->
+                <div class="pt-3 border-t border-slate-700/80 space-y-2.5 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400 font-semibold">Velocidad Simulación:</span>
+                        <div class="flex gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
+                            <button data-speed="0.25" class="speed-btn px-2 py-0.5 rounded text-slate-400 hover:text-white cursor-pointer">0.25x</button>
+                            <button data-speed="0.5" class="speed-btn px-2 py-0.5 rounded text-slate-400 hover:text-white cursor-pointer">0.5x</button>
+                            <button data-speed="1" class="speed-btn px-2 py-0.5 rounded bg-indigo-600 text-white font-bold cursor-pointer">1.0x</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 select-none">
+                            <input type="checkbox" id="chkVectors" checked class="rounded accent-emerald-500 w-3.5 h-3.5 cursor-pointer">
+                            <span>Vectores</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 select-none">
+                            <input type="checkbox" id="chkHeights" checked class="rounded accent-rose-500 w-3.5 h-3.5 cursor-pointer">
+                            <span>Cotas h₁, h₂</span>
+                        </label>
+                        <button id="btnDefaults" class="text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                            Restaurar Valores
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Lienzo Canvas + Telemetría en Tiempo Real (8 columnas) -->
+            <div class="lg:col-span-8 flex flex-col gap-5">
+                <div class="bg-slate-800/75 backdrop-blur border border-slate-700/80 rounded-2xl p-4 shadow-xl flex flex-col">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-3 px-1">
+                        <div class="flex items-center gap-2">
+                            <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                            <h2 class="text-sm sm:text-base font-bold text-slate-200">Escena Física Interactiva (Arrastra pesas sobre m₁ o m₂)</h2>
+                        </div>
+                        <span id="simBadge" class="text-xs font-medium px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            Listo para iniciar
+                        </span>
+                    </div>
+
+                    <!-- Canvas 2D Responsivo con soporte Drag & Drop -->
+                    <div id="canvasDropZone" class="relative w-full h-80 sm:h-96 bg-slate-950 rounded-xl border-2 border-slate-800 overflow-hidden shadow-inner transition-colors">
+                        <canvas id="physicsCanvas" class="w-full h-full block"></canvas>
+
+                        <!-- Leyenda de Vectores -->
+                        <div id="vectorLegend" class="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-sm border border-slate-700/80 rounded-xl p-2.5 text-[11px] space-y-1 pointer-events-none">
+                            <div class="font-semibold text-slate-300 border-b border-slate-700 pb-1 mb-1">Vectores Actuantes:</div>
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-emerald-400 inline-block"></span> <span class="text-emerald-300">Normal (N₁, N₂)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-cyan-400 inline-block"></span> <span class="text-cyan-300">Tensión (T)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-rose-400 inline-block"></span> <span class="text-rose-300">Peso (m·g)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-amber-400 inline-block"></span> <span class="text-amber-300">Fricción (Fᵣ₁, Fᵣ₂)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-fuchsia-400 inline-block"></span> <span class="text-fuchsia-300">Aceleración (a)</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Progreso del Recorrido L -->
+                    <div class="mt-4 px-1">
+                        <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+                            <span>Desplazamiento actual (x): <strong id="livePos" class="text-white font-mono">0.000 m</strong></span>
+                            <span>Meta objetivo (L): <strong id="liveTargetL" class="text-emerald-400 font-mono">0.800 m</strong></span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700/70">
+                            <div id="progressFill" class="h-full bg-gradient-to-r from-blue-500 via-indigo-400 to-emerald-400 transition-all duration-75" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjetas de Telemetría Instantánea -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
+                        <div class="text-xs text-slate-400">Tiempo (t)</div>
+                        <div id="liveTime" class="text-xl font-extrabold text-amber-400 font-mono mt-0.5">0.00 s</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5" id="targetTimeHint">Meta L: 2.50 s</div>
+                    </div>
+
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
+                        <div class="text-xs text-slate-400">Velocidad Instantánea (v)</div>
+                        <div id="liveVel" class="text-xl font-extrabold text-indigo-400 font-mono mt-0.5">0.00 m/s</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5" id="targetVelHint">En L: 0.64 m/s</div>
+                    </div>
+
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
+                        <div class="text-xs text-slate-400">Energía Cinética Total (K)</div>
+                        <div id="liveK" class="text-xl font-extrabold text-emerald-400 font-mono mt-0.5">0.00 J</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5" id="targetKHint">En L: 4.51 J</div>
+                    </div>
+
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
+                        <div class="text-xs text-slate-400">Energía Potencial Neta (ΔUg)</div>
+                        <div id="liveUg" class="text-xl font-extrabold text-rose-400 font-mono mt-0.5">0.00 J</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5" id="targetUgHint">En L: -33.66 J</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Inferior: Desarrollo Analítico en 5 Pasos -->
+        <section class="bg-slate-800/75 backdrop-blur border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700 pb-4 mb-5">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                        <span>📐</span> Desarrollo Analítico en 5 Pasos
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-400">
+                        Resolución dinámica, cinemática y energética con actualización numérica en tiempo real.
+                    </p>
+                </div>
+                <span class="text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-mono self-start sm:self-auto">
+                    Verificación Unidades: [K] = kg · (m/s)² = N · m = J
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                <!-- Columna 1: Pasos 1, 2 y 4 -->
+                <div class="flex flex-col gap-4">
+                    <!-- Paso 1 -->
+                    <div class="bg-slate-900/80 border border-slate-700/70 rounded-xl p-4">
+                        <h3 class="text-sm font-bold text-cyan-400 border-b border-slate-800 pb-2 mb-2.5">
+                            Paso 1: Diagrama de Cuerpo Libre y Ejes
+                        </h3>
+                        <ul class="text-xs space-y-2 text-slate-300 leading-relaxed">
+                            <li><strong class="text-blue-300">Bloque 1 (m₁):</strong> Eje x paralelo al plano izquierdo. Actúan Tensión (T), componente del peso m₁·g·sen(θ₁), fricción cinética Fᵣ₁, Normal N₁ y m₁·g·cos(θ₁).</li>
+                            <li><strong class="text-indigo-300">Bloque 2 (m₂):</strong> Eje x paralelo al plano derecho. Actúan componente del peso m₂·g·sen(θ₂), Tensión (T), fricción cinética Fᵣ₂, Normal N₂ y m₂·g·cos(θ₂).</li>
+                        </ul>
+                    </div>
+
+                    <!-- Paso 2 -->
+                    <div class="bg-slate-900/80 border border-slate-700/70 rounded-xl p-4">
+                        <h3 class="text-sm font-bold text-blue-400 border-b border-slate-800 pb-2 mb-2.5">
+                            Paso 2: Datos del Ejercicio
+                        </h3>
+                        <div class="grid grid-cols-2 gap-2 text-xs font-mono text-slate-300">
+                            <div class="bg-slate-800/80 p-2 rounded-lg">m₁ = <span id="dataM1" class="text-blue-400 font-bold">10.0 kg</span></div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg">θ₁ = <span id="dataTheta1" class="text-blue-400 font-bold">20°</span></div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg">m₂ = <span id="dataM2" class="text-indigo-400 font-bold">12.0 kg</span></div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg">θ₂ = <span id="dataTheta2" class="text-indigo-400 font-bold">40°</span></div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg">μ = <span id="dataMu" class="text-amber-400 font-bold">0.20</span></div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg">g = <span class="text-rose-400 font-bold">9.8 m/s²</span></div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg col-span-2">Desplazamiento L = <span id="dataL" class="text-emerald-400 font-bold">0.80 m</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 4 -->
+                    <div class="bg-slate-900/80 border border-slate-700/70 rounded-xl p-4">
+                        <h3 class="text-sm font-bold text-amber-400 border-b border-slate-800 pb-2 mb-2.5">
+                            Paso 4: Incógnitas a Determinar
+                        </h3>
+                        <ul class="text-xs space-y-1.5 text-slate-300 list-disc list-inside">
+                            <li>Fuerzas Normales (<span class="font-mono text-emerald-300">N₁, N₂</span>) y Fricciones (<span class="font-mono text-amber-300">Fᵣ₁, Fᵣ₂</span>)</li>
+                            <li>Aceleración del sistema (<span class="font-mono text-fuchsia-300">a</span>) y Tensión (<span class="font-mono text-cyan-300">T</span>)</li>
+                            <li>Velocidad final tras avanzar <span class="font-mono">L</span> (<span class="font-mono text-indigo-300">v</span>)</li>
+                            <li>Desplazamientos verticales (<span class="font-mono text-rose-300">h₁, h₂</span>)</li>
+                            <li>Energía Potencial (<span class="font-mono text-amber-300">Ug₁, Ug₂</span>) y Cinética (<span class="font-mono text-emerald-300">K</span>)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Paso 3 Ecuaciones Gobernantes -->
+                <div class="bg-slate-900/80 border border-slate-700/70 rounded-xl p-4 flex flex-col gap-2.5">
+                    <h3 class="text-sm font-bold text-indigo-400 border-b border-slate-800 pb-2">
+                        Paso 3: Ecuaciones Gobernantes
+                    </h3>
+                    <div class="text-xs space-y-2.5 text-slate-300 font-mono">
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                            <span class="text-slate-400 block font-sans mb-1">1. Fuerzas Normales (eje y):</span>
+                            <div>N₁ = m₁ · g · cos(θ₁)</div>
+                            <div>N₂ = m₂ · g · cos(θ₂)</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                            <span class="text-slate-400 block font-sans mb-1">2. Fuerzas de Fricción Cinética:</span>
+                            <div>Fᵣ₁ = μ · N₁</div>
+                            <div>Fᵣ₂ = μ · N₂</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                            <span class="text-slate-400 block font-sans mb-1">3. Segunda Ley de Newton (eje x):</span>
+                            <div>Bloque 1: T - m₁·g·sen(θ₁) - Fᵣ₁ = m₁·a</div>
+                            <div>Bloque 2: m₂·g·sen(θ₂) - T - Fᵣ₂ = m₂·a</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                            <span class="text-slate-400 block font-sans mb-1">4. Aceleración y Tensión:</span>
+                            <div class="text-fuchsia-300">a = [m₂·g·sen(θ₂) - m₁·g·sen(θ₁) - Fᵣ₁ - Fᵣ₂] / (m₁ + m₂)</div>
+                            <div class="text-cyan-300 mt-1">T = m₁·a + m₁·g·sen(θ₁) + Fᵣ₁</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                            <span class="text-slate-400 block font-sans mb-1">5. Cinemática y Trabajo-Energía:</span>
+                            <div>v = a · √(2L / a) = √(2 · a · L)</div>
+                            <div>Ug = m · g · h &nbsp;|&nbsp; K = ½ · (m₁ + m₂) · v²</div>
+                            <div class="text-emerald-300 mt-1 text-[11px]">Unidades: [kg · (m/s)²] = [kg·m/s²]·m = N·m = J</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna 3: Paso 5 Desarrollo y Cálculos Paso a Paso -->
+                <div class="bg-slate-900/80 border border-slate-700/70 rounded-xl p-4 flex flex-col gap-3">
+                    <h3 class="text-sm font-bold text-emerald-400 border-b border-slate-800 pb-2">
+                        Paso 5: Desarrollo y Cálculos Numéricos
+                    </h3>
+                    <div class="text-xs space-y-2.5 text-slate-300">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                                <span class="text-slate-400 block">Normal 1 (N₁):</span>
+                                <span id="calcN1" class="text-sm font-bold text-emerald-400 font-mono">92.09 N</span>
+                            </div>
+                            <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                                <span class="text-slate-400 block">Normal 2 (N₂):</span>
+                                <span id="calcN2" class="text-sm font-bold text-emerald-400 font-mono">90.09 N</span>
+                            </div>
+                            <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                                <span class="text-slate-400 block">Fricción 1 (Fᵣ₁):</span>
+                                <span id="calcFR1" class="text-sm font-bold text-amber-400 font-mono">18.42 N</span>
+                            </div>
+                            <div class="bg-slate-800/80 p-2.5 rounded-lg">
+                                <span class="text-slate-400 block">Fricción 2 (Fᵣ₂):</span>
+                                <span id="calcFR2" class="text-sm font-bold text-amber-400 font-mono">18.02 N</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800/80 p-3 rounded-lg space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Componentes del Peso:</span>
+                                <span class="font-mono text-[11px]" id="calcWeights">W₂ₓ = 75.59 N | W₁ₓ = 33.52 N</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-slate-700 pt-1.5">
+                                <span class="font-semibold text-slate-200">Aceleración (a):</span>
+                                <span id="calcAccel" class="text-base font-extrabold text-fuchsia-400 font-mono">0.256 m/s²</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-slate-700 pt-1.5">
+                                <span class="font-semibold text-slate-200">Tensión (T):</span>
+                                <span id="calcTension" class="text-base font-extrabold text-cyan-400 font-mono">54.50 N</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Tiempo para recorrer L:</span>
+                                <span id="calcTimeL" class="font-bold text-amber-300 font-mono">2.50 s</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Velocidad final en L (v):</span>
+                                <span id="calcVelL" class="font-bold text-indigo-300 font-mono">0.640 m/s</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Altura masa 1 (h₁):</span>
+                                <span id="calcH1" class="font-bold text-blue-300 font-mono">+0.2736 m</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Altura masa 2 (h₂):</span>
+                                <span id="calcH2" class="font-bold text-rose-300 font-mono">-0.5142 m</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg space-y-1.5 border border-emerald-500/20">
+                            <span class="text-emerald-300 font-bold block">Energías Evaluadas en L:</span>
+                            <div class="flex justify-between">
+                                <span>Ug₁ = m₁ · g · h₁ :</span>
+                                <span id="calcUg1" class="font-bold text-blue-400 font-mono">+26.81 J</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Ug₂ = m₂ · g · h₂ :</span>
+                                <span id="calcUg2" class="font-bold text-rose-400 font-mono">-60.47 J</span>
+                            </div>
+                            <div class="flex justify-between border-t border-slate-700 pt-1">
+                                <span>ΔUg Total = Ug₁ + Ug₂ :</span>
+                                <span id="calcUgTotal" class="font-bold text-amber-400 font-mono">-33.66 J</span>
+                            </div>
+                            <div class="flex justify-between border-t border-slate-700 pt-1">
+                                <span>K Total = ½(m₁ + m₂)v² :</span>
+                                <span id="calcKTotal" class="font-extrabold text-emerald-400 font-mono">4.51 J</span>
+                            </div>
+                        </div>
+
+                        <div id="motionStatusNote" class="text-[11px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-2 rounded-lg">
+                            ✅ El bloque m₂ desciende arrastrando a m₁ hacia arriba por el plano izquierdo.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Notificación Flotante -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 bg-slate-800 border border-emerald-500/50 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2.5 text-sm">
+        <span class="text-emerald-400 text-lg">✅</span>
+        <span id="toastMessage">Acción completada.</span>
+    </div>
+
+    <script>
+        /**
+         * SIMULADOR INTERACTIVO DE FÍSICA: DOS BLOQUES EN PLANOS INCLINADOS
+         * Incluye controles de movimiento paso a paso, intercambio de masas,
+         * arrastrar y soltar pesas, polea giratoria y cálculo analítico en tiempo real.
+         */
+        const GRAVITY = 9.8; // m/s^2
+        const STEP_DT = 0.05; // Incremento de tiempo para botón Paso a Paso (s)
+
+        const sliders = {
+            m1: document.getElementById('sliderM1'),
+            theta1: document.getElementById('sliderTheta1'),
+            m2: document.getElementById('sliderM2'),
+            theta2: document.getElementById('sliderTheta2'),
+            mu: document.getElementById('sliderMu'),
+            L: document.getElementById('sliderL')
+        };
+
+        const labels = {
+            m1: document.getElementById('lblM1'),
+            theta1: document.getElementById('lblTheta1'),
+            m2: document.getElementById('lblM2'),
+            theta2: document.getElementById('lblTheta2'),
+            mu: document.getElementById('lblMu'),
+            L: document.getElementById('lblL')
+        };
+
+        const chkVectors = document.getElementById('chkVectors');
+        const chkHeights = document.getElementById('chkHeights');
+        const vectorLegend = document.getElementById('vectorLegend');
+
+        const btnPlay = document.getElementById('btnPlay');
+        const btnPause = document.getElementById('btnPause');
+        const btnStep = document.getElementById('btnStep');
+        const btnReset = document.getElementById('btnReset');
+        const btnSwapMasses = document.getElementById('btnSwapMasses');
+        const btnDefaults = document.getElementById('btnDefaults');
+        const btnDownload = document.getElementById('btnDownload');
+
+        const simBadge = document.getElementById('simBadge');
+        const statusDot = document.getElementById('statusDot');
+        const canvas = document.getElementById('physicsCanvas');
+        const canvasDropZone = document.getElementById('canvasDropZone');
+        const ctx = canvas.getContext('2d');
+
+        // Estado de la simulación
+        let state = {
+            isRunning: false,
+            x: 0,               // Desplazamiento a lo largo del plano (m)
+            v: 0,               // Velocidad instantánea (m/s)
+            t: 0,               // Tiempo transcurrido (s)
+            timeScale: 1.0,     // Velocidad de cámara lenta (0.25x, 0.5x, 1.0x)
+            selectedTarget: 'm1', // 'm1' o 'm2' para asignación rápida desde el banco de pesas
+            lastFrameTime: null
+        };
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Obtener paleta visual del bloque según su masa
+        function getBlockStyle(mass) {
+            if (mass <= 3) return { fill: '#0d9488', stroke: '#5eead4' }; // Teal
+            if (mass <= 7) return { fill: '#0284c7', stroke: '#7dd3fc' }; // Sky
+            if (mass <= 11) return { fill: '#2563eb', stroke: '#93c5fd' }; // Blue
+            if (mass <= 14) return { fill: '#4f46e5', stroke: '#c7d2fe' }; // Indigo
+            if (mass <= 18) return { fill: '#7c3aed', stroke: '#ddd6fe' }; // Purple
+            return { fill: '#e11d48', stroke: '#fda4af' }; // Rose
+        }
+
+        // Cálculo analítico completo del sistema
+        function computePhysics() {
+            const m1 = parseFloat(sliders.m1.value);
+            const theta1Deg = parseFloat(sliders.theta1.value);
+            const m2 = parseFloat(sliders.m2.value);
+            const theta2Deg = parseFloat(sliders.theta2.value);
+            const mu = parseFloat(sliders.mu.value);
+            const g = GRAVITY;
+            const L = parseFloat(sliders.L.value);
+
+            const theta1 = (theta1Deg * Math.PI) / 180;
+            const theta2 = (theta2Deg * Math.PI) / 180;
+
+            // 1. Normales
+            const N1 = m1 * g * Math.cos(theta1);
+            const N2 = m2 * g * Math.cos(theta2);
+
+            // 2. Fricciones Cinéticas
+            const FR1 = mu * N1;
+            const FR2 = mu * N2;
+
+            // 3. Componentes paralelas del peso
+            const W1x = m1 * g * Math.sin(theta1);
+            const W2x = m2 * g * Math.sin(theta2);
+
+            // 4. Dirección y aceleración
+            let a = 0;
+            let T = 0;
+            let direction = 0; // 1: m2 baja, -1: m1 baja, 0: equilibrio por fricción
+
+            const netDriveRight = W2x - W1x;
+            const totalFriction = FR1 + FR2;
+
+            if (netDriveRight > totalFriction) {
+                direction = 1;
+                a = (W2x - W1x - FR1 - FR2) / (m1 + m2);
+                T = m1 * a + W1x + FR1;
+            } else if (-netDriveRight > totalFriction) {
+                direction = -1;
+                a = (W1x - W2x - FR1 - FR2) / (m1 + m2);
+                T = m1 * g * Math.sin(theta1) - FR1 - m1 * a;
+            } else {
+                direction = 0;
+                a = 0;
+                T = (W1x + W2x) / 2;
+            }
+
+            // 5. Valores en la meta L
+            const timeAtL = a > 0 ? Math.sqrt((2 * L) / a) : 0;
+            const velAtL = a > 0 ? Math.sqrt(2 * a * L) : 0;
+
+            const signedL = direction === -1 ? -L : L;
+            const h1AtL = signedL * Math.sin(theta1);
+            const h2AtL = -signedL * Math.sin(theta2);
+
+            const Ug1AtL = m1 * g * h1AtL;
+            const Ug2AtL = m2 * g * h2AtL;
+            const UgTotalAtL = Ug1AtL + Ug2AtL;
+            const KTotalAtL = 0.5 * (m1 + m2) * Math.pow(velAtL, 2);
+
+            // 6. Valores instantáneos en state.x
+            const signedX = direction === -1 ? -state.x : state.x;
+            const currentH1 = signedX * Math.sin(theta1);
+            const currentH2 = -signedX * Math.sin(theta2);
+            const currentUg = m1 * g * currentH1 + m2 * g * currentH2;
+            const currentK = 0.5 * (m1 + m2) * Math.pow(state.v, 2);
+
+            return {
+                m1, m2, theta1Deg, theta2Deg, theta1, theta2, mu, g, L,
+                N1, N2, FR1, FR2, W1x, W2x,
+                a, T, direction,
+                timeAtL, velAtL,
+                h1AtL, h2AtL, Ug1AtL, Ug2AtL, UgTotalAtL, KTotalAtL,
+                currentH1, currentH2, currentUg, currentK
+            };
+        }
+
+        function updateUI() {
+            const p = computePhysics();
+
+            // Etiquetas sliders
+            labels.m1.textContent = `${p.m1.toFixed(1)} kg`;
+            labels.theta1.textContent = `${p.theta1Deg}°`;
+            labels.m2.textContent = `${p.m2.toFixed(1)} kg`;
+            labels.theta2.textContent = `${p.theta2Deg}°`;
+            labels.mu.textContent = p.mu.toFixed(2);
+            labels.L.textContent = `${p.L.toFixed(2)} m`;
+
+            // Paso 2: Datos
+            document.getElementById('dataM1').textContent = `${p.m1.toFixed(1)} kg`;
+            document.getElementById('dataTheta1').textContent = `${p.theta1Deg}°`;
+            document.getElementById('dataM2').textContent = `${p.m2.toFixed(1)} kg`;
+            document.getElementById('dataTheta2').textContent = `${p.theta2Deg}°`;
+            document.getElementById('dataMu').textContent = p.mu.toFixed(2);
+            document.getElementById('dataL').textContent = `${p.L.toFixed(2)} m`;
+
+            // Paso 5: Resultados
+            document.getElementById('calcN1').textContent = `${p.N1.toFixed(2)} N`;
+            document.getElementById('calcN2').textContent = `${p.N2.toFixed(2)} N`;
+            document.getElementById('calcFR1').textContent = `${p.FR1.toFixed(2)} N`;
+            document.getElementById('calcFR2').textContent = `${p.FR2.toFixed(2)} N`;
+
+            document.getElementById('calcWeights').textContent = `W₂ₓ = ${p.W2x.toFixed(2)} N | W₁ₓ = ${p.W1x.toFixed(2)} N`;
+            const signedAccel = p.direction === -1 ? -p.a : p.a;
+            document.getElementById('calcAccel').textContent = `${signedAccel.toFixed(3)} m/s²`;
+            document.getElementById('calcTension').textContent = `${p.T.toFixed(2)} N`;
+
+            const statusNote = document.getElementById('motionStatusNote');
+            if (p.direction === 1) {
+                statusNote.className = "text-[11px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-2 rounded-lg";
+                statusNote.textContent = "✅ El bloque m₂ desciende arrastrando a m₁ hacia arriba por el plano izquierdo.";
+            } else if (p.direction === -1) {
+                statusNote.className = "text-[11px] bg-amber-500/10 border border-amber-500/30 text-amber-300 p-2 rounded-lg";
+                statusNote.textContent = "⚠️ Al intercambiar/ajustar masas, m₁ desciende arrastrando a m₂ hacia arriba.";
+            } else {
+                statusNote.className = "text-[11px] bg-rose-500/10 border border-rose-500/30 text-rose-300 p-2 rounded-lg";
+                statusNote.textContent = "🛑 Sistema en equilibrio: la fuerza de fricción impide el movimiento (a = 0).";
+            }
+
+            document.getElementById('calcTimeL').textContent = p.a > 0 ? `${p.timeAtL.toFixed(2)} s` : "∞ (Reposo)";
+            document.getElementById('calcVelL').textContent = `${p.velAtL.toFixed(3)} m/s`;
+            document.getElementById('calcH1').textContent = `${p.h1AtL >= 0 ? '+' : ''}${p.h1AtL.toFixed(4)} m`;
+            document.getElementById('calcH2').textContent = `${p.h2AtL >= 0 ? '+' : ''}${p.h2AtL.toFixed(4)} m`;
+            document.getElementById('calcUg1').textContent = `${p.Ug1AtL >= 0 ? '+' : ''}${p.Ug1AtL.toFixed(2)} J`;
+            document.getElementById('calcUg2').textContent = `${p.Ug2AtL >= 0 ? '+' : ''}${p.Ug2AtL.toFixed(2)} J`;
+            document.getElementById('calcUgTotal').textContent = `${p.UgTotalAtL >= 0 ? '+' : ''}${p.UgTotalAtL.toFixed(2)} J`;
+            document.getElementById('calcKTotal').textContent = `${p.KTotalAtL.toFixed(2)} J`;
+
+            // Telemetría en vivo
+            document.getElementById('livePos').textContent = `${state.x.toFixed(3)} m`;
+            document.getElementById('liveTargetL').textContent = `${p.L.toFixed(3)} m`;
+            const pct = Math.min(100, (state.x / p.L) * 100);
+            document.getElementById('progressFill').style.width = `${pct}%`;
+
+            document.getElementById('liveTime').textContent = `${state.t.toFixed(2)} s`;
+            document.getElementById('targetTimeHint').textContent = p.a > 0 ? `En L: ${p.timeAtL.toFixed(2)} s` : `Sin movimiento`;
+
+            document.getElementById('liveVel').textContent = `${state.v.toFixed(2)} m/s`;
+            document.getElementById('targetVelHint').textContent = `En L: ${p.velAtL.toFixed(2)} m/s`;
+
+            document.getElementById('liveK').textContent = `${p.currentK.toFixed(2)} J`;
+            document.getElementById('targetKHint').textContent = `En L: ${p.KTotalAtL.toFixed(2)} J`;
+
+            document.getElementById('liveUg').textContent = `${p.currentUg.toFixed(2)} J`;
+            document.getElementById('targetUgHint').textContent = `En L: ${p.UgTotalAtL.toFixed(2)} J`;
+
+            vectorLegend.style.display = chkVectors.checked ? 'block' : 'none';
+        }
+
+        function updateControlButtons() {
+            btnPlay.disabled = state.isRunning;
+            btnPause.disabled = !state.isRunning;
+            if (state.isRunning) {
+                btnPlay.classList.add('opacity-40', 'cursor-not-allowed');
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
+            } else {
+                btnPlay.classList.remove('opacity-40', 'cursor-not-allowed');
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-blue-400";
+            }
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawVector(x1, y1, dx, dy, color, label, labelOffset = { x: 0, y: -8 }) {
+            const mag = Math.hypot(dx, dy);
+            if (mag < 2) return;
+
+            const x2 = x1 + dx;
+            const y2 = y1 + dy;
+            const angle = Math.atan2(dy, dx);
+            const headLen = 8;
+
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2.2;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+
+            if (label) {
+                ctx.font = 'bold 11px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, x2 + labelOffset.x, y2 + labelOffset.y);
+            }
+            ctx.restore();
+        }
+
+        function draw() {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            ctx.clearRect(0, 0, w, h);
+
+            const p = computePhysics();
+
+            // Cuadrícula de fondo
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
+            ctx.lineWidth = 1;
+            const gridSize = 24;
+            for (let gx = 0; gx < w; gx += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(gx, 0);
+                ctx.lineTo(gx, h);
+                ctx.stroke();
+            }
+            for (let gy = 0; gy < h; gy += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.lineTo(w, gy);
+                ctx.stroke();
+            }
+
+            // Geometría de la doble cuña
+            const apexX = w * 0.5;
+            const apexY = h * 0.22;
+            const baseY = h * 0.86;
+            const maxRampHeight = baseY - apexY;
+
+            const leftRun = Math.min(w * 0.44, maxRampHeight / Math.tan(p.theta1));
+            const leftRampTopY = baseY - leftRun * Math.tan(p.theta1);
+
+            const rightRun = Math.min(w * 0.44, maxRampHeight / Math.tan(p.theta2));
+            const rightRampTopY = baseY - rightRun * Math.tan(p.theta2);
+
+            const commonApexY = Math.min(leftRampTopY, rightRampTopY);
+            const actualLeftRun = (baseY - commonApexY) / Math.tan(p.theta1);
+            const actualRightRun = (baseY - commonApexY) / Math.tan(p.theta2);
+
+            const leftBaseX = apexX - actualLeftRun;
+            const rightBaseX = apexX + actualRightRun;
+
+            // Suelo horizontal
+            ctx.beginPath();
+            ctx.moveTo(20, baseY);
+            ctx.lineTo(w - 20, baseY);
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Estructura triangular
+            ctx.beginPath();
+            ctx.moveTo(leftBaseX, baseY);
+            ctx.lineTo(apexX, commonApexY);
+            ctx.lineTo(rightBaseX, baseY);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, commonApexY, 0, baseY);
+            grad.addColorStop(0, 'rgba(30, 41, 59, 0.9)');
+            grad.addColorStop(1, 'rgba(15, 23, 42, 0.95)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Rampa Izquierda
+            ctx.beginPath();
+            ctx.moveTo(leftBaseX, baseY);
+            ctx.lineTo(apexX, commonApexY);
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 3.5;
+            ctx.stroke();
+
+            // Rampa Derecha
+            ctx.beginPath();
+            ctx.moveTo(apexX, commonApexY);
+            ctx.lineTo(rightBaseX, baseY);
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 3.5;
+            ctx.stroke();
+
+            // Arcos de ángulos
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(leftBaseX, baseY, 34, -p.theta1, 0);
+            ctx.stroke();
+            ctx.fillStyle = '#93c5fd';
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.fillText(`θ₁=${p.theta1Deg}°`, leftBaseX + 42, baseY - 10);
+
+            ctx.beginPath();
+            ctx.arc(rightBaseX, baseY, 34, Math.PI, Math.PI + p.theta2);
+            ctx.stroke();
+            ctx.fillStyle = '#c7d2fe';
+            ctx.fillText(`θ₂=${p.theta2Deg}°`, rightBaseX - 85, baseY - 10);
+
+            // Longitudes en píxeles
+            const lenLeftPx = Math.hypot(actualLeftRun, baseY - commonApexY);
+            const lenRightPx = Math.hypot(actualRightRun, baseY - commonApexY);
+
+            const maxTravelPx = Math.min(lenLeftPx, lenRightPx) * 0.42;
+            const travelRatio = p.L > 0 ? (state.x / p.L) : 0;
+            const signedTravelPx = (p.direction === -1 ? -1 : 1) * travelRatio * maxTravelPx;
+
+            // Tamaño visual dinámico proporcional a la masa
+            const b1Scale = 0.85 + Math.min(0.45, p.m1 / 45);
+            const b2Scale = 0.85 + Math.min(0.45, p.m2 / 45);
+            const b1W = 46 * b1Scale, b1H = 30 * b1Scale;
+            const b2W = 46 * b2Scale, b2H = 30 * b2Scale;
+            const pulleyRadius = 14;
+
+            const startDistLeft = lenLeftPx * 0.38;
+            const currentDistLeft = startDistLeft + signedTravelPx;
+
+            const startDistRight = lenRightPx * 0.38;
+            const currentDistRight = startDistRight + signedTravelPx;
+
+            const u1x = Math.cos(p.theta1);
+            const u1y = -Math.sin(p.theta1);
+            const n1x = -Math.sin(p.theta1);
+            const n1y = -Math.cos(p.theta1);
+
+            const b1StartSurfaceX = leftBaseX + startDistLeft * u1x;
+            const b1StartSurfaceY = baseY + startDistLeft * u1y;
+            const b1SurfaceX = leftBaseX + currentDistLeft * u1x;
+            const b1SurfaceY = baseY + currentDistLeft * u1y;
+            const b1CenterX = b1SurfaceX + (b1H / 2) * n1x;
+            const b1CenterY = b1SurfaceY + (b1H / 2) * n1y;
+
+            const u2x = Math.cos(p.theta2);
+            const u2y = Math.sin(p.theta2);
+            const n2x = Math.sin(p.theta2);
+            const n2y = -Math.cos(p.theta2);
+
+            const b2StartSurfaceX = apexX + startDistRight * u2x;
+            const b2StartSurfaceY = commonApexY + startDistRight * u2y;
+            const b2SurfaceX = apexX + currentDistRight * u2x;
+            const b2SurfaceY = commonApexY + currentDistRight * u2y;
+            const b2CenterX = b2SurfaceX + (b2H / 2) * n2x;
+            const b2CenterY = b2SurfaceY + (b2H / 2) * n2y;
+
+            // Cotas verticales h1 y h2
+            if (chkHeights.checked && state.x > 0.005) {
+                ctx.save();
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1.5;
+
+                ctx.strokeStyle = '#60a5fa';
+                ctx.beginPath();
+                ctx.moveTo(b1StartSurfaceX, b1StartSurfaceY);
+                ctx.lineTo(b1SurfaceX, b1StartSurfaceY);
+                ctx.lineTo(b1SurfaceX, b1SurfaceY);
+                ctx.stroke();
+                ctx.fillStyle = '#93c5fd';
+                ctx.font = 'bold 11px Inter, sans-serif';
+                ctx.fillText(`h₁=${p.currentH1 >= 0 ? '+' : ''}${p.currentH1.toFixed(2)}m`, b1SurfaceX + 6, (b1StartSurfaceY + b1SurfaceY) / 2);
+
+                ctx.strokeStyle = '#fb7185';
+                ctx.beginPath();
+                ctx.moveTo(b2StartSurfaceX, b2StartSurfaceY);
+                ctx.lineTo(b2StartSurfaceX, b2SurfaceY);
+                ctx.lineTo(b2SurfaceX, b2SurfaceY);
+                ctx.stroke();
+                ctx.fillStyle = '#fda4af';
+                ctx.fillText(`h₂=${p.currentH2 >= 0 ? '+' : ''}${p.currentH2.toFixed(2)}m`, b2StartSurfaceX - 68, (b2StartSurfaceY + b2SurfaceY) / 2);
+                ctx.restore();
+            }
+
+            // Regla graduada de distancia L en el plano izquierdo
+            const markEndX = leftBaseX + (startDistLeft + (p.direction === -1 ? -maxTravelPx : maxTravelPx)) * u1x;
+            const markEndY = baseY + (startDistLeft + (p.direction === -1 ? -maxTravelPx : maxTravelPx)) * u1y;
+
+            ctx.save();
+            ctx.strokeStyle = '#10b981';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(b1StartSurfaceX + 44 * n1x, b1StartSurfaceY + 44 * n1y);
+            ctx.lineTo(markEndX + 44 * n1x, markEndY + 44 * n1y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            const midMarkX = (b1StartSurfaceX + markEndX) / 2 + 54 * n1x;
+            const midMarkY = (b1StartSurfaceY + markEndY) / 2 + 54 * n1y;
+            ctx.fillText(`L = ${p.L.toFixed(2)} m`, midMarkX - 25, midMarkY);
+            ctx.restore();
+
+            // Cuerda
+            const pulleyCenterY = commonApexY - 6;
+            ctx.beginPath();
+            ctx.moveTo(b1CenterX, b1CenterY);
+            ctx.lineTo(apexX - pulleyRadius * Math.sin(p.theta1), pulleyCenterY - pulleyRadius * Math.cos(p.theta1));
+            ctx.lineTo(apexX + pulleyRadius * Math.sin(p.theta2), pulleyCenterY - pulleyRadius * Math.cos(p.theta2));
+            ctx.lineTo(b2CenterX, b2CenterY);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2.2;
+            ctx.stroke();
+
+            // Polea giratoria proporcional al desplazamiento
+            const pulleyAngle = signedTravelPx / pulleyRadius;
+            ctx.save();
+            ctx.translate(apexX, pulleyCenterY);
+            ctx.rotate(pulleyAngle);
+            ctx.beginPath();
+            ctx.arc(0, 0, pulleyRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#334155';
+            ctx.fill();
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Radios visuales de la polea para notar la rotación
+            ctx.beginPath();
+            ctx.moveTo(-pulleyRadius + 2, 0);
+            ctx.lineTo(pulleyRadius - 2, 0);
+            ctx.moveTo(0, -pulleyRadius + 2);
+            ctx.lineTo(0, pulleyRadius - 2);
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fill();
+            ctx.restore();
+
+            // Bloque 1 (m1)
+            const style1 = getBlockStyle(p.m1);
+            ctx.save();
+            ctx.translate(b1CenterX, b1CenterY);
+            ctx.rotate(-p.theta1);
+            ctx.fillStyle = style1.fill;
+            ctx.strokeStyle = style1.stroke;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(-b1W / 2, -b1H / 2, b1W, b1H, 6);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`m₁: ${p.m1}kg`, 0, 0);
+            ctx.restore();
+
+            // Bloque 2 (m2)
+            const style2 = getBlockStyle(p.m2);
+            ctx.save();
+            ctx.translate(b2CenterX, b2CenterY);
+            ctx.rotate(p.theta2);
+            ctx.fillStyle = style2.fill;
+            ctx.strokeStyle = style2.stroke;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(-b2W / 2, -b2H / 2, b2W, b2H, 6);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`m₂: ${p.m2}kg`, 0, 0);
+            ctx.restore();
+
+            // Vectores de Fuerza
+            if (chkVectors.checked) {
+                const forceScale = 0.40;
+
+                // Bloque 1
+                drawVector(b1CenterX, b1CenterY, n1x * p.N1 * forceScale, n1y * p.N1 * forceScale, '#34d399', 'N₁', { x: -10, y: -8 });
+                drawVector(b1CenterX, b1CenterY, 0, (p.m1 * p.g) * forceScale, '#fb7185', 'm₁g', { x: 16, y: 6 });
+                drawVector(b1CenterX, b1CenterY, u1x * p.T * forceScale, u1y * p.T * forceScale, '#22d3ee', 'T', { x: 8, y: -10 });
+                const frDir1 = p.direction === -1 ? 1 : -1;
+                drawVector(b1SurfaceX, b1SurfaceY, frDir1 * u1x * p.FR1 * forceScale * 1.4, frDir1 * u1y * p.FR1 * forceScale * 1.4, '#fbbf24', 'Fᵣ₁', { x: -12, y: 10 });
+
+                // Bloque 2
+                drawVector(b2CenterX, b2CenterY, n2x * p.N2 * forceScale, n2y * p.N2 * forceScale, '#34d399', 'N₂', { x: 12, y: -8 });
+                drawVector(b2CenterX, b2CenterY, 0, (p.m2 * p.g) * forceScale, '#fb7185', 'm₂g', { x: -16, y: 6 });
+                drawVector(b2CenterX, b2CenterY, -u2x * p.T * forceScale, -u2y * p.T * forceScale, '#22d3ee', 'T', { x: -8, y: -10 });
+                const frDir2 = p.direction === -1 ? 1 : -1;
+                drawVector(b2SurfaceX, b2SurfaceY, frDir2 * u2x * p.FR2 * forceScale * 1.4, frDir2 * u2y * p.FR2 * forceScale * 1.4, '#fbbf24', 'Fᵣ₂', { x: 14, y: -8 });
+
+                // Aceleración
+                if (p.a > 0) {
+                    const accDir = p.direction === -1 ? -1 : 1;
+                    drawVector(
+                        b1CenterX + (b1H * 0.9) * n1x,
+                        b1CenterY + (b1H * 0.9) * n1y,
+                        accDir * u1x * 36,
+                        accDir * u1y * 36,
+                        '#e879f9',
+                        'a',
+                        { x: 0, y: -10 }
+                    );
+                }
+            }
+        }
+
+        // Avance de un intervalo físico dt
+        function advancePhysicsStep(dt) {
+            const p = computePhysics();
+
+            if (p.a === 0 || p.direction === 0) {
+                state.isRunning = false;
+                updateControlButtons();
+                simBadge.textContent = "En equilibrio (Fricción ≥ Fuerza neta)";
+                simBadge.className = "text-xs font-medium px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30";
+                updateUI();
+                draw();
+                return false;
+            }
+
+            if (state.x >= p.L) {
+                state.isRunning = false;
+                updateControlButtons();
+                return false;
+            }
+
+            state.t += dt;
+            state.v = p.a * state.t;
+            state.x = 0.5 * p.a * state.t * state.t;
+
+            if (state.x >= p.L) {
+                state.x = p.L;
+                state.t = p.timeAtL;
+                state.v = p.velAtL;
+                state.isRunning = false;
+                updateControlButtons();
+                simBadge.textContent = `¡Meta L = ${p.L.toFixed(2)} m alcanzada!`;
+                simBadge.className = "text-xs font-medium px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+            }
+
+            updateUI();
+            draw();
+            return state.isRunning;
+        }
+
+        function loop(timestamp) {
+            if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+            const rawDt = (timestamp - state.lastFrameTime) / 1000;
+            state.lastFrameTime = timestamp;
+
+            const dt = Math.min(rawDt, 0.05) * state.timeScale;
+
+            if (state.isRunning) {
+                const keepGoing = advancePhysicsStep(dt);
+                if (keepGoing) {
+                    requestAnimationFrame(loop);
+                }
+            }
+        }
+
+        function resetSimulation() {
+            state.isRunning = false;
+            state.x = 0;
+            state.v = 0;
+            state.t = 0;
+            state.lastFrameTime = null;
+            updateControlButtons();
+            simBadge.textContent = "Listo para iniciar";
+            simBadge.className = "text-xs font-medium px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30";
+            updateUI();
+            draw();
+        }
+
+        // Eventos de botones de movimiento
+        btnPlay.addEventListener('click', () => {
+            const p = computePhysics();
+            if (state.x >= p.L) {
+                resetSimulation();
+            }
+            state.isRunning = true;
+            updateControlButtons();
+            simBadge.textContent = `Simulando (${state.timeScale}x)...`;
+            simBadge.className = "text-xs font-medium px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+            state.lastFrameTime = null;
+            requestAnimationFrame(loop);
+        });
+
+        btnPause.addEventListener('click', () => {
+            state.isRunning = false;
+            updateControlButtons();
+            simBadge.textContent = "En pausa";
+            simBadge.className = "text-xs font-medium px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        });
+
+        btnStep.addEventListener('click', () => {
+            state.isRunning = false;
+            updateControlButtons();
+            const p = computePhysics();
+            if (state.x >= p.L) {
+                resetSimulation();
+            }
+            simBadge.textContent = `Modo Paso a Paso (+${STEP_DT} s)`;
+            simBadge.className = "text-xs font-medium px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30";
+            advancePhysicsStep(STEP_DT);
+        });
+
+        btnReset.addEventListener('click', resetSimulation);
+
+        // Intercambiar masas (m1 <-> m2)
+        btnSwapMasses.addEventListener('click', () => {
+            const tempM1 = sliders.m1.value;
+            sliders.m1.value = sliders.m2.value;
+            sliders.m2.value = tempM1;
+            resetSimulation();
+            showToast(`Masas intercambiadas: m₁ = ${sliders.m1.value} kg, m₂ = ${sliders.m2.value} kg`);
+        });
+
+        // Selector de destino en el banco de pesas (m1 o m2)
+        const targetM1Btn = document.getElementById('targetM1Btn');
+        const targetM2Btn = document.getElementById('targetM2Btn');
+
+        targetM1Btn.addEventListener('click', () => {
+            state.selectedTarget = 'm1';
+            targetM1Btn.className = "px-2 py-0.5 rounded bg-blue-600 text-white font-bold cursor-pointer";
+            targetM2Btn.className = "px-2 py-0.5 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 font-bold cursor-pointer";
+        });
+
+        targetM2Btn.addEventListener('click', () => {
+            state.selectedTarget = 'm2';
+            targetM2Btn.className = "px-2 py-0.5 rounded bg-indigo-600 text-white font-bold cursor-pointer";
+            targetM1Btn.className = "px-2 py-0.5 rounded bg-slate-700 text-slate-300 hover:bg-slate-600 font-bold cursor-pointer";
+        });
+
+        // Clic y Drag & Drop en fichas de pesas
+        document.querySelectorAll('.weight-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const massVal = chip.getAttribute('data-mass');
+                if (state.selectedTarget === 'm1') {
+                    sliders.m1.value = massVal;
+                    showToast(`Bloque m₁ actualizado a ${massVal} kg`);
+                } else {
+                    sliders.m2.value = massVal;
+                    showToast(`Bloque m₂ actualizado a ${massVal} kg`);
+                }
+                resetSimulation();
+            });
+
+            chip.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', chip.getAttribute('data-mass'));
+            });
+        });
+
+        // Zona de soltado sobre el Canvas (mitad izquierda -> m1, mitad derecha -> m2)
+        canvasDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            canvasDropZone.classList.add('border-indigo-500');
+        });
+
+        canvasDropZone.addEventListener('dragleave', () => {
+            canvasDropZone.classList.remove('border-indigo-500');
+        });
+
+        canvasDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            canvasDropZone.classList.remove('border-indigo-500');
+            const massVal = e.dataTransfer.getData('text/plain');
+            if (!massVal) return;
+
+            const rect = canvasDropZone.getBoundingClientRect();
+            const dropX = e.clientX - rect.left;
+            if (dropX < rect.width / 2) {
+                sliders.m1.value = massVal;
+                showToast(`Pesa soltada en plano izquierdo: m₁ = ${massVal} kg`);
+            } else {
+                sliders.m2.value = massVal;
+                showToast(`Pesa soltada en plano derecho: m₂ = ${massVal} kg`);
+            }
+            resetSimulation();
+        });
+
+        // Control de velocidad (0.25x, 0.5x, 1.0x)
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.timeScale = parseFloat(btn.getAttribute('data-speed'));
+                document.querySelectorAll('.speed-btn').forEach(b => {
+                    b.className = "speed-btn px-2 py-0.5 rounded text-slate-400 hover:text-white cursor-pointer";
+                });
+                btn.className = "speed-btn px-2 py-0.5 rounded bg-indigo-600 text-white font-bold cursor-pointer";
+                if (state.isRunning) {
+                    simBadge.textContent = `Simulando (${state.timeScale}x)...`;
+                }
+            });
+        });
+
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', resetSimulation);
+        });
+
+        chkVectors.addEventListener('change', () => {
+            updateUI();
+            draw();
+        });
+
+        chkHeights.addEventListener('change', draw);
+
+        btnDefaults.addEventListener('click', () => {
+            sliders.m1.value = 10;
+            sliders.theta1.value = 20;
+            sliders.m2.value = 12;
+            sliders.theta2.value = 40;
+            sliders.mu.value = 0.20;
+            sliders.L.value = 0.80;
+            resetSimulation();
+            showToast("Valores iniciales restaurados.");
+        });
+
+        // Exportar archivo HTML autocontenido
+        btnDownload.addEventListener('click', () => {
+            try {
+                const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'simulador_planos_inclinados.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("Simulador descargado como 'simulador_planos_inclinados.html'");
+            } catch (err) {
+                showToast("No se pudo generar la descarga.");
+            }
+        });
+
+        window.onload = function () {
+            resizeCanvas();
+            updateControlButtons();
+            updateUI();
+            draw();
+        };
+    </script>
+</body>
+</html>
+```
